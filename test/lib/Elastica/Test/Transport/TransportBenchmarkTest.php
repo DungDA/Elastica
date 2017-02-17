@@ -8,6 +8,12 @@ use Elastica\Test\Base as BaseTest;
 
 class TransportBenchmarkTest extends BaseTest
 {
+    protected function setUp()
+    {
+        parent::setUp();
+        $this->markTestIncomplete('Benchmarks currently skipped with es2.0. Has to be reworked');
+    }
+
     protected $_max = 1000;
 
     protected $_maxData = 20;
@@ -174,17 +180,6 @@ class TransportBenchmarkTest extends BaseTest
                 ),
                 'Http:Persistent',
             ),
-            array(
-                array(
-                    'transport' => 'Thrift',
-                    'host' => $this->_getHost(),
-                    'port' => 9500,
-                    'config' => array(
-                        'framedTransport' => false,
-                    ),
-                ),
-                'Thrift:Buffered',
-            ),
         );
     }
 
@@ -263,10 +258,6 @@ class TransportBenchmarkTest extends BaseTest
 
     protected function _checkTransport(array $config, $transport)
     {
-        if (strpos($transport, 'Thrift') !== false && !class_exists('Elasticsearch\\RestClient')) {
-            self::markTestSkipped('munkie/elasticsearch-thrift-php package should be installed to run thrift transport tests');
-        }
-
         $this->_checkConnection($config['host'], $config['port']);
     }
 }
