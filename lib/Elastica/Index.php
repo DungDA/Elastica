@@ -151,7 +151,7 @@ class Index implements SearchableInterface
                 if (($time - $currentTime > 86400000) || ($currentTime - $time > 5184000000)) {
                     continue;
                 }
-                $doc->setIndex($this->getName() . '_' . (new \DateTime($doc->toArray()['_source']['createdAt']))->format('Y_m'));
+                $doc->setIndex($doc->getType() . '_' . (new \DateTime($doc->toArray()['_source']['createdAt']))->format('Y_m'));
             } else {
                 $doc->setIndex($this->getName());
             }
