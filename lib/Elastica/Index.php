@@ -147,8 +147,8 @@ class Index implements SearchableInterface
         foreach ($docs as $doc) {
             if (isset($doc->toArray()['_source']['createdAt'])) {
                 $time = strtotime($doc->toArray()['_source']['createdAt']);
-                // continue if time greater than 1 day or less than 60 days
-                if (($time - $currentTime > 86400000) || ($currentTime - $time > 5184000000)) {
+                // continue if time greater than 10 day or less than 60 days
+                if (($time - $currentTime > 864000) || ($currentTime - $time > 5184000)) {
                     continue;
                 }
                 $doc->setIndex($doc->getType() . '_' . (new \DateTime($doc->toArray()['_source']['createdAt']))->format('Y_m'));
