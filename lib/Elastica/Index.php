@@ -145,15 +145,16 @@ class Index implements SearchableInterface
     {
         $currentTime = time();
         foreach ($docs as $doc) {
-            if (isset($doc->toArray()['_source']['createdAt'])) {
-                $time = strtotime($doc->toArray()['_source']['createdAt']);
+            $docArray = $doc->toArray();
+            if (isset($docArray['_source']['createdAt'])) {
+                $time = strtotime($docArray['_source']['createdAt']);
                 // continue if time greater than 10 day or less than 60 days
                 if (($time - $currentTime > 864000) || ($currentTime - $time > 5184000)) {
-                    continue;
+                    $docArray['_source']['createdAt'] = (new \DateTime())->format('c');
                 }
-                $doc->setIndex($doc->getType() . '_' . (new \DateTime($doc->toArray()['_source']['createdAt']))->format('Y_m'));
+                $doc->setIndex($doc->getType() . '_' . (new \DateTime($docArray['_source']['createdAt']))->format('Y_m'));
             } else {
-                $doc->setIndex($this->getName());
+                $doc->setIndex($doc->getType() . '_' . (new \DateTime())->format('Y_m'));
             }
         }
 
