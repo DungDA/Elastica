@@ -28,23 +28,16 @@ class Response
     protected $_responseString = '';
 
     /**
-     * Error.
-     *
-     * @var bool Error
-     */
-    protected $_error = false;
-
-    /**
      * Transfer info.
      *
      * @var array transfer info
      */
-    protected $_transferInfo = array();
+    protected $_transferInfo = [];
 
     /**
      * Response.
      *
-     * @var array|null Response data array
+     * @var array|null
      */
     protected $_response;
 
@@ -113,11 +106,11 @@ class Response
     }
 
     /**
-     * A keyed array representing any errors that occured.
+     * A keyed array representing any errors that occurred.
      *
      * In case of http://localhost:9200/_alias/test the error is a string
      *
-     * @return array|string Error data
+     * @return array|string|null Error data or null if there is no error
      */
     public function getFullError()
     {
@@ -137,13 +130,7 @@ class Response
      */
     public function getErrorMessage()
     {
-        $error = $this->getError();
-
-        if (!is_string($error)) {
-            $error = json_encode($error);
-        }
-
-        return $error;
+        return $this->getError();
     }
 
     /**
@@ -155,11 +142,7 @@ class Response
     {
         $response = $this->getData();
 
-        if (isset($response['error'])) {
-            return true;
-        }
-
-        return false;
+        return isset($response['error']);
     }
 
     /**
@@ -189,11 +172,7 @@ class Response
 
         // Bulk insert checks. Check every item
         if (isset($data['status'])) {
-            if ($data['status'] >= 200 && $data['status'] <= 300) {
-                return true;
-            }
-
-            return false;
+            return $data['status'] >= 200 && $data['status'] <= 300;
         }
 
         if (isset($data['items'])) {
@@ -204,7 +183,9 @@ class Response
             foreach ($data['items'] as $item) {
                 if (isset($item['index']['ok']) && false == $item['index']['ok']) {
                     return false;
-                } elseif (isset($item['index']['status']) && ($item['index']['status'] < 200 || $item['index']['status'] >= 300)) {
+                }
+
+                if (isset($item['index']['status']) && ($item['index']['status'] < 200 || $item['index']['status'] >= 300)) {
                     return false;
                 }
             }
@@ -237,26 +218,23 @@ class Response
     {
         if ($this->_response == null) {
             $response = $this->_responseString;
-            if ($response === false) {
-                $this->_error = true;
-            } else {
-                try {
-                    if ($this->getJsonBigintConversion()) {
-                        $response = JSON::parse($response, true, 512, JSON_BIGINT_AS_STRING);
-                    } else {
-                        $response = JSON::parse($response);
-                    }
-                } catch (JSONParseException $e) {
-                    // leave response as is if parse fails
+
+            try {
+                if ($this->getJsonBigintConversion()) {
+                    $response = JSON::parse($response, true, 512, JSON_BIGINT_AS_STRING);
+                } else {
+                    $response = JSON::parse($response);
                 }
+            } catch (JSONParseException $e) {
+                // leave response as is if parse fails
             }
 
             if (empty($response)) {
-                $response = array();
+                $response = [];
             }
 
             if (is_string($response)) {
-                $response = array('message' => $response);
+                $response = ['message' => $response];
             }
 
             $this->_response = $response;

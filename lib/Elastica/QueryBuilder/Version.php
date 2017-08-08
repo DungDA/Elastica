@@ -13,28 +13,28 @@ abstract class Version
      *
      * @var string[]
      */
-    protected $queries = array();
+    protected $queries = [];
 
     /**
      * supported filter methods.
      *
      * @var string[]
      */
-    protected $filters = array();
+    protected $filters = [];
 
     /**
      * supported aggregation methods.
      *
      * @var string[]
      */
-    protected $aggregations = array();
+    protected $aggregations = [];
 
     /**
      * supported $suggester methods.
      *
      * @var string[]
      */
-    protected $suggesters = array();
+    protected $suggesters = [];
 
     /**
      * returns true if $name is supported, false otherwise.
@@ -49,8 +49,6 @@ abstract class Version
         switch ($type) {
             case DSL::TYPE_QUERY:
                 return in_array($name, $this->queries);
-            case DSL::TYPE_FILTER:
-                return in_array($name, $this->filters);
             case DSL::TYPE_AGGREGATION:
                 return in_array($name, $this->aggregations);
             case DSL::TYPE_SUGGEST:
@@ -67,14 +65,6 @@ abstract class Version
     public function getAggregations()
     {
         return $this->aggregations;
-    }
-
-    /**
-     * @return string[]
-     */
-    public function getFilters()
-    {
-        return $this->filters;
     }
 
     /**

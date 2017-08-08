@@ -2,8 +2,8 @@
 namespace Elastica\Type;
 
 use Elastica\Exception\InvalidException;
-use Elastica\Request;
 use Elastica\Type;
+use Elasticsearch\Endpoints\Indices\Mapping\Put;
 
 /**
  * Elastica Mapping object.
@@ -19,7 +19,7 @@ class Mapping
      *
      * @var array Mapping
      */
-    protected $_mapping = array();
+    protected $_mapping = [];
 
     /**
      * Type.
@@ -34,7 +34,7 @@ class Mapping
      * @param \Elastica\Type $type       OPTIONAL Type object
      * @param array          $properties OPTIONAL Properties
      */
-    public function __construct(Type $type = null, array $properties = array())
+    public function __construct(Type $type = null, array $properties = [])
     {
         if ($type) {
             $this->setType($type);
@@ -134,7 +134,7 @@ class Mapping
      */
     public function disableSource($enabled = false)
     {
-        return $this->setSource(array('enabled' => $enabled));
+        return $this->setSource(['enabled' => $enabled]);
     }
 
     /**
@@ -201,31 +201,7 @@ class Mapping
      */
     public function enableAllField($enabled = true)
     {
-        return $this->setAllField(array('enabled' => $enabled));
-    }
-
-    /**
-     * Set TTL.
-     *
-     * @param array $params TTL Params (enabled, default, ...)
-     *
-     * @return $this
-     */
-    public function setTtl(array $params)
-    {
-        return $this->setParam('_ttl', $params);
-    }
-
-    /**
-     * Enables TTL for all documents in this type.
-     *
-     * @param bool $enabled OPTIONAL (default = true)
-     *
-     * @return $this
-     */
-    public function enableTtl($enabled = true)
-    {
-        return $this->setTTL(array('enabled' => $enabled));
+        return $this->setAllField(['enabled' => $enabled]);
     }
 
     /**
@@ -237,7 +213,7 @@ class Mapping
      */
     public function setParent($type)
     {
-        return $this->setParam('_parent', array('type' => $type));
+        return $this->setParam('_parent', ['type' => $type]);
     }
 
     /**
@@ -255,7 +231,7 @@ class Mapping
             throw new InvalidException('Type has to be set');
         }
 
-        return array($type->getName() => $this->_mapping);
+        return [$type->getName() => $this->_mapping];
     }
 
     /**
@@ -265,11 +241,13 @@ class Mapping
      *
      * @return \Elastica\Response Response object
      */
-    public function send(array $query = array())
+    public function send(array $query = [])
     {
-        $path = '_mapping';
+        $endpoint = new Put();
+        $endpoint->setBody($this->toArray());
+        $endpoint->setParams($query);
 
-        return $this->getType()->request($path, Request::PUT, $this->toArray(), $query);
+        return $this->getType()->requestEndpoint($endpoint);
     }
 
     /**
@@ -286,6 +264,7 @@ class Mapping
         if (is_array($mapping)) {
             $mappingObject = new self();
             $mappingObject->setProperties($mapping);
+
             return $mappingObject;
         }
 

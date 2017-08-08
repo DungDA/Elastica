@@ -45,7 +45,7 @@ class MultiMatch extends AbstractQuery
      *
      * @return $this
      */
-    public function setFields($fields = array())
+    public function setFields($fields = [])
     {
         return $this->setParam('fields', $fields);
     }
@@ -87,7 +87,7 @@ class MultiMatch extends AbstractQuery
      *
      * @return $this
      */
-    public function setOperator($operator = 'or')
+    public function setOperator($operator = self::OPERATOR_OR)
     {
         return $this->setParam('operator', $operator);
     }
@@ -113,7 +113,7 @@ class MultiMatch extends AbstractQuery
      *
      * @return $this
      */
-    public function setZeroTermsQuery($zeroTermQuery = 'none')
+    public function setZeroTermsQuery($zeroTermQuery = self::ZERO_TERM_NONE)
     {
         return $this->setParam('zero_terms_query', $zeroTermQuery);
     }

@@ -32,7 +32,7 @@ class IndexDocument extends AbstractDocument
      */
     protected function _getMetadata(AbstractUpdateAction $action)
     {
-        $params = array(
+        $params = [
             'index',
             'type',
             'id',
@@ -40,10 +40,8 @@ class IndexDocument extends AbstractDocument
             'version_type',
             'routing',
             'parent',
-            'ttl',
-            'timestamp',
             'retry_on_conflict',
-        );
+        ];
 
         $metadata = $action->getOptions($params, true);
 

@@ -2,9 +2,7 @@
 namespace Elastica;
 
 use Elastica\Bulk\Action;
-use Elastica\Exception\DeprecatedException;
 use Elastica\Exception\InvalidException;
-use Elastica\Exception\NotImplementedException;
 
 /**
  * Single document stored in elastic search.
@@ -20,7 +18,7 @@ class Document extends AbstractUpdateAction
      *
      * @var array Document data
      */
-    protected $_data = array();
+    protected $_data = [];
 
     /**
      * Whether to use this document to upsert if the document does not exist.
@@ -39,10 +37,10 @@ class Document extends AbstractUpdateAction
      *
      * @param int|string   $id    OPTIONAL $id Id is create if empty
      * @param array|string $data  OPTIONAL Data array
-     * @param string       $type  OPTIONAL Type name
-     * @param string       $index OPTIONAL Index name
+     * @param Type|string  $type  OPTIONAL Type name
+     * @param Index|string $index OPTIONAL Index name
      */
-    public function __construct($id = '', $data = array(), $type = '', $index = '')
+    public function __construct($id = '', $data = [], $type = '', $index = '')
     {
         $this->setId($id);
         $this->setData($data);
@@ -149,23 +147,6 @@ class Document extends AbstractUpdateAction
     }
 
     /**
-     * Adds the given key/value pair to the document.
-     *
-     * @deprecated Will be removed in further Elastica releases. Use Elastica\Document::set instead
-     *
-     * @param string $key   Document entry key
-     * @param mixed  $value Document entry value
-     *
-     * @return $this
-     */
-    public function add($key, $value)
-    {
-        trigger_error('Deprecated: Elastica\Document::add is deprecated and will be removed in further Elastica releases. Use Elastica\Document::set instead.', E_USER_DEPRECATED);
-
-        return $this->set($key, $value);
-    }
-
-    /**
      * Adds a file to the index.
      *
      * To use this feature you have to call the following command in the
@@ -187,7 +168,7 @@ class Document extends AbstractUpdateAction
         $value = base64_encode(file_get_contents($filepath));
 
         if (!empty($mimeType)) {
-            $value = array('_content_type' => $mimeType, '_name' => $filepath, '_content' => $value);
+            $value = ['_content_type' => $mimeType, '_name' => $filepath, '_content' => $value];
         }
 
         $this->set($key, $value);
@@ -223,7 +204,7 @@ class Document extends AbstractUpdateAction
      */
     public function addGeoPoint($key, $latitude, $longitude)
     {
-        $value = array('lat' => $latitude, 'lon' => $longitude);
+        $value = ['lat' => $latitude, 'lon' => $longitude];
 
         $this->set($key, $value);
 
@@ -252,38 +233,6 @@ class Document extends AbstractUpdateAction
     public function getData()
     {
         return $this->_data;
-    }
-
-    /**
-     * @deprecated setScript() is no longer available as of 0.90.2. See http://elastica.io/migration/0.90.2/upsert.html to migrate. This method will be removed in further Elastica releases
-     *
-     * @param \Elastica\Script\Script $data
-     *
-     * @throws NotImplementedException
-     */
-    public function setScript($data)
-    {
-        throw new DeprecatedException('setScript() is no longer available as of 0.90.2. See http://elastica.io/migration/0.90.2/upsert.html to migrate');
-    }
-
-    /**
-     * @throws NotImplementedException
-     *
-     * @deprecated getScript() is no longer available as of 0.90.2. See http://elastica.io/migration/0.90.2/upsert.html to migrate. This method will be removed in further Elastica releases
-     */
-    public function getScript()
-    {
-        throw new DeprecatedException('getScript() is no longer available as of 0.90.2. See http://elastica.io/migration/0.90.2/upsert.html to migrate');
-    }
-
-    /**
-     * @throws NotImplementedException
-     *
-     * @deprecated hasScript() is no longer available as of 0.90.2. See http://elastica.io/migration/0.90.2/upsert.html to migrate. This method will be removed in further Elastica releases
-     */
-    public function hasScript()
-    {
-        throw new DeprecatedException('hasScript() is no longer available as of 0.90.2. See http://elastica.io/migration/0.90.2/upsert.html to migrate');
     }
 
     /**
