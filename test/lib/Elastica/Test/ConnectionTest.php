@@ -44,7 +44,7 @@ class ConnectionTest extends BaseTest
     {
         $connection = new Connection(array('port' => 9999));
 
-        $request = new Request('_status', Request::GET);
+        $request = new Request('_stats', Request::GET);
         $request->setConnection($connection);
 
         // Throws exception because no valid connection
@@ -150,5 +150,27 @@ class ConnectionTest extends BaseTest
         $connection = $client->getConnection();
 
         $this->assertTrue($connection->hasCompression());
+    }
+
+    /**
+     * @group unit
+     */
+    public function testUsernameFromClient()
+    {
+        $username = 'foo';
+        $client = new \Elastica\Client(array('username' => $username));
+
+        $this->assertEquals($username, $client->getConnection()->getUsername('username'));
+    }
+
+    /**
+     * @group unit
+     */
+    public function testPasswordFromClient()
+    {
+        $password = 'bar';
+        $client = new \Elastica\Client(array('password' => $password));
+
+        $this->assertEquals($password, $client->getConnection()->getPassword('password'));
     }
 }

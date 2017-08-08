@@ -6,7 +6,7 @@ use Elastica\Suggest\CandidateGenerator\AbstractCandidateGenerator;
 /**
  * Class Phrase.
  *
- * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-suggesters-phrase.html
+ * @link https://www.elastic.co/guide/en/elasticsearch/reference/current/search-suggesters-phrase.html
  */
 class Phrase extends AbstractSuggest
 {
@@ -173,10 +173,6 @@ class Phrase extends AbstractSuggest
 
             $keys = array_keys($generator);
             $values = array_values($generator);
-
-            if (!isset($array[$baseName][$keys[0]])) {
-                $array[$baseName][$keys[0]] = array();
-            }
 
             $array[$baseName][$keys[0]][] = $values[0];
         }

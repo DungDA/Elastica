@@ -3,19 +3,106 @@ namespace Elastica\Test;
 
 use Elastica\Document;
 use Elastica\Exception\InvalidException;
-use Elastica\Facet\Terms;
+use Elastica\Filter\Exists;
 use Elastica\Query;
 use Elastica\Query\Builder;
 use Elastica\Query\Term;
 use Elastica\Query\Text;
-use Elastica\Script;
-use Elastica\ScriptFields;
+use Elastica\Script\Script;
+use Elastica\Script\ScriptFields;
 use Elastica\Suggest;
 use Elastica\Test\Base as BaseTest;
 use Elastica\Type;
 
 class QueryTest extends BaseTest
 {
+    /**
+     * @group unit
+     */
+    public function testCreateWithLegacyFilterDeprecated()
+    {
+        $this->hideDeprecated();
+        $existsFilter = new Exists('test');
+        $this->showDeprecated();
+
+        $errorsCollector = $this->startCollectErrors();
+        Query::create($existsFilter);
+        $this->finishCollectErrors();
+
+        $errorsCollector->assertOnlyDeprecatedErrors(
+            array(
+                'Deprecated: Elastica\Query::create() passing filter is deprecated. Create query and use setPostFilter with AbstractQuery instead.',
+                'Deprecated: Elastica\Query::setPostFilter() passing filter as AbstractFilter is deprecated. Pass instance of AbstractQuery instead.',
+            )
+        );
+    }
+
+    /**
+     * @group unit
+     * @expectedException \Elastica\Exception\InvalidException
+     */
+    public function testSetFilterInvalid()
+    {
+        $query = new Query();
+        $query->setFilter($this);
+    }
+
+    /**
+     * @group unit
+     */
+    public function testSetFilterWithLegacyFilterDeprecated()
+    {
+        $this->hideDeprecated();
+        $existsFilter = new Exists('test');
+        $this->showDeprecated();
+
+        $query = new Query();
+
+        $errorsCollector = $this->startCollectErrors();
+        $query->setFilter($existsFilter);
+        $this->finishCollectErrors();
+
+        $errorsCollector->assertOnlyDeprecatedErrors(
+            array(
+                'Deprecated: Elastica\Query::setFilter() passing filter as AbstractFilter is deprecated. Pass instance of AbstractQuery instead.',
+                'Deprecated: Elastica\Query::setFilter() is deprecated and will be removed in further Elastica releases. Use Elastica\Query::setPostFilter() instead.',
+                'Deprecated: Elastica\Query::setPostFilter() passing filter as AbstractFilter is deprecated. Pass instance of AbstractQuery instead.',
+            )
+        );
+    }
+
+    /**
+     * @group unit
+     * @expectedException \Elastica\Exception\InvalidException
+     */
+    public function testSetPostFilterInvalid()
+    {
+        $query = new Query();
+        $query->setPostFilter($this);
+    }
+
+    /**
+     * @group unit
+     */
+    public function testSetPostFilterWithLegacyFilterDeprecated()
+    {
+        $this->hideDeprecated();
+        $existsFilter = new Exists('test');
+        $this->showDeprecated();
+
+        $query = new Query();
+
+        $errorsCollector = $this->startCollectErrors();
+        $query->setPostFilter($existsFilter);
+        $this->finishCollectErrors();
+
+        $errorsCollector->assertOnlyDeprecatedErrors(
+            array(
+                'Deprecated: Elastica\Query::setPostFilter() passing filter as AbstractFilter is deprecated. Pass instance of AbstractQuery instead.',
+            )
+        );
+    }
+
     /**
      * @group unit
      */
@@ -234,26 +321,6 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testSetFacets()
-    {
-        $query = new Query();
-
-        $facet = new Terms('text');
-        $query->setFacets(array($facet));
-
-        $data = $query->toArray();
-
-        $this->assertArrayHasKey('facets', $data);
-        $this->assertEquals(array('text' => array('terms' => array())), $data['facets']);
-
-        $query->setFacets(array());
-
-        $this->assertArrayNotHasKey('facets', $query->toArray());
-    }
-
-    /**
-     * @group unit
-     */
     public function testSetQueryToArrayCast()
     {
         $query = new Query();
@@ -344,17 +411,24 @@ class QueryTest extends BaseTest
     /**
      * @group unit
      */
-    public function testAddFacetToArrayCast()
+    public function testAddScriptFieldToExistingScriptFields()
     {
+        $script1 = new Script('s1');
+        $script2 = new Script('s2');
+
+        // add script1, then add script2
         $query = new Query();
-        $facet = new Terms('text');
+        $scriptFields1 = new ScriptFields();
+        $scriptFields1->addScript('script1', $script1);
+        $query->setScriptFields($scriptFields1);
+        $query->addScriptField('script2', $script2);
 
-        $query->addFacet($facet);
-
-        $facet->setName('another text');
-
+        // add script1 and script2 at once
         $anotherQuery = new Query();
-        $anotherQuery->addFacet($facet);
+        $scriptFields2 = new ScriptFields();
+        $scriptFields2->addScript('script1', $script1);
+        $scriptFields2->addScript('script2', $script2);
+        $anotherQuery->setScriptFields($scriptFields2);
 
         $this->assertEquals($query->toArray(), $anotherQuery->toArray());
     }
@@ -366,6 +440,7 @@ class QueryTest extends BaseTest
     {
         $query = new Query();
         $aggregation = new \Elastica\Aggregation\Terms('text');
+        $aggregation->setField('field');
 
         $query->addAggregation($aggregation);
 
@@ -421,6 +496,26 @@ class QueryTest extends BaseTest
     public function testSetPostFilterToArrayCast()
     {
         $query = new Query();
+        $postFilter = new \Elastica\Query\Terms();
+        $postFilter->setTerms('key', array('term'));
+        $query->setPostFilter($postFilter);
+
+        $postFilter->setTerms('another key', array('another term'));
+
+        $anotherQuery = new Query();
+        $anotherQuery->setPostFilter($postFilter);
+
+        $this->assertEquals($query->toArray(), $anotherQuery->toArray());
+    }
+
+    /**
+     * @group unit
+     */
+    public function testLegacySetPostFilterToArrayCast()
+    {
+        $this->hideDeprecated();
+
+        $query = new Query();
         $postFilter = new \Elastica\Filter\Terms();
         $postFilter->setTerms('key', array('term'));
         $query->setPostFilter($postFilter);
@@ -430,6 +525,7 @@ class QueryTest extends BaseTest
         $anotherQuery = new Query();
         $anotherQuery->setPostFilter($postFilter);
 
+        $this->showDeprecated();
         $this->assertEquals($query->toArray(), $anotherQuery->toArray());
     }
 

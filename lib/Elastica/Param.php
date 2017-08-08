@@ -6,7 +6,7 @@ use Elastica\Exception\InvalidException;
 /**
  * Class to handle params.
  *
- * This function can be used to handle params for queries, filter, facets
+ * This function can be used to handle params for queries, filter
  *
  * @author Nicolas Ruflin <spam@ruflin.com>
  */
@@ -137,10 +137,6 @@ class Param implements ArrayableInterface
     public function addParam($key, $value)
     {
         if ($key != null) {
-            if (!isset($this->_params[$key])) {
-                $this->_params[$key] = array();
-            }
-
             $this->_params[$key][] = $value;
         } else {
             $this->_params = $value;
