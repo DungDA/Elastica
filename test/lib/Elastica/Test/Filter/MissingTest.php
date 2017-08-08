@@ -2,27 +2,36 @@
 namespace Elastica\Test\Filter;
 
 use Elastica\Filter\Missing;
-use Elastica\Test\Base as BaseTest;
+use Elastica\Test\DeprecatedClassBase as BaseTest;
 
 class MissingTest extends BaseTest
 {
     /**
      * @group unit
      */
+    public function testDeprecated()
+    {
+        $reflection = new \ReflectionClass(new Missing());
+        $this->assertFileDeprecated($reflection->getFileName(), 'Deprecated: Filters are deprecated. Use queries in filter context. See https://www.elastic.co/guide/en/elasticsearch/reference/2.0/query-dsl-filters.html');
+    }
+
+    /**
+     * @group unit
+     */
     public function testToArray()
     {
         $filter = new Missing('field_name');
-        $expectedArray = array('missing' => array('field' => 'field_name'));
+        $expectedArray = ['missing' => ['field' => 'field_name']];
         $this->assertEquals($expectedArray, $filter->toArray());
 
         $filter = new Missing('field_name');
         $filter->setExistence(true);
-        $expectedArray = array('missing' => array('field' => 'field_name', 'existence' => true));
+        $expectedArray = ['missing' => ['field' => 'field_name', 'existence' => true]];
         $this->assertEquals($expectedArray, $filter->toArray());
 
         $filter = new Missing('field_name');
         $filter->setNullValue(true);
-        $expectedArray = array('missing' => array('field' => 'field_name', 'null_value' => true));
+        $expectedArray = ['missing' => ['field' => 'field_name', 'null_value' => true]];
         $this->assertEquals($expectedArray, $filter->toArray());
     }
 

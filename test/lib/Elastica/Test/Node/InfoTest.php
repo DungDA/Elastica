@@ -22,10 +22,12 @@ class InfoTest extends BaseTest
         $this->assertNull($info->get('os', 'mem', 'total'));
 
         // Load os infos
-        $info = new NodeInfo($node, array('os'));
+        $info = new NodeInfo($node, ['os']);
 
-        $this->assertNotNull($info->get('os', 'mem', 'total_in_bytes'));
-        $this->assertInternalType('array', $info->get('os', 'mem'));
+        $this->assertNotNull($info->get('os', 'name'));
+        $this->assertNotNull($info->get('process', 'id'));
+        $this->assertNotNull($info->get('jvm', 'mem', 'heap_init_in_bytes'));
+        $this->assertInternalType('array', $info->get('jvm', 'mem'));
         $this->assertNull($info->get('test', 'notest', 'notexist'));
     }
 
@@ -59,7 +61,7 @@ class InfoTest extends BaseTest
         $client = $this->_getClient();
         $nodes = $client->getCluster()->getNodes();
 
-        $ids = array();
+        $ids = [];
 
         foreach ($nodes as $node) {
             $id = $node->getInfo()->getId();

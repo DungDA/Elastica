@@ -20,29 +20,12 @@ class StatusTest extends BaseTest
     /**
      * @group functional
      */
-    public function testGetIndexStatuses()
-    {
-        $index = $this->_createIndex();
-
-        $status = new Status($index->getClient());
-        $statuses = $status->getIndexStatuses();
-
-        $this->assertInternalType('array', $statuses);
-
-        foreach ($statuses as $indexStatus) {
-            $this->assertInstanceOf('Elastica\Index\Status', $indexStatus);
-        }
-    }
-
-    /**
-     * @group functional
-     */
     public function testGetIndexNames()
     {
         $indexName = 'test';
         $client = $this->_getClient();
         $index = $client->getIndex($indexName);
-        $index->create(array(), true);
+        $index->create([], true);
         $index = $this->_createIndex();
         $index->refresh();
         $index->optimize();
@@ -79,6 +62,7 @@ class StatusTest extends BaseTest
         $this->assertFalse($status->indexExists($indexName));
         $index->create();
 
+        usleep(10000);
         $status->refresh();
         $this->assertTrue($status->indexExists($indexName));
     }
@@ -106,28 +90,9 @@ class StatusTest extends BaseTest
         $this->assertTrue($status->aliasExists($aliasName));
 
         $indicesWithAlias = $status->getIndicesWithAlias($aliasName);
-        $this->assertEquals(array($indexName), array_map(
+        $this->assertEquals([$indexName], array_map(
             function ($index) {
                 return $index->getName();
             }, $indicesWithAlias));
-    }
-
-    /**
-     * @group functional
-     */
-    public function testServerStatus()
-    {
-        $client = $this->_getClient();
-        $status = $client->getStatus();
-        $serverStatus = $status->getServerStatus();
-
-        $this->assertTrue(!empty($serverStatus));
-        $this->assertTrue('array' == gettype($serverStatus));
-        $this->assertArrayHasKey('status', $serverStatus);
-        $this->assertTrue($serverStatus['status'] == 200);
-        $this->assertArrayHasKey('version', $serverStatus);
-
-        $versionInfo = $serverStatus['version'];
-        $this->assertArrayHasKey('number', $versionInfo);
     }
 }

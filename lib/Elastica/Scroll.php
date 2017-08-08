@@ -6,7 +6,7 @@ namespace Elastica;
  *
  * @author Manuel Andreo Garcia <andreo.garcia@gmail.com>
  *
- * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html
+ * @link https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-scroll.html
  */
 class Scroll implements \Iterator
 {
@@ -23,12 +23,12 @@ class Scroll implements \Iterator
     /**
      * @var null|string
      */
-    protected $_nextScrollId = null;
+    protected $_nextScrollId;
 
     /**
      * @var null|ResultSet
      */
-    protected $_currentResultSet = null;
+    protected $_currentResultSet;
 
     /**
      * 0: scroll<br>
@@ -37,7 +37,7 @@ class Scroll implements \Iterator
      *
      * @var array
      */
-    protected $_options = array(null, null, null);
+    protected $_options = [null, null, null];
 
     /**
      * Constructor.
@@ -116,7 +116,7 @@ class Scroll implements \Iterator
     {
         // reset state
         $this->_nextScrollId = null;
-        $this->_options = array(null, null, null);
+        $this->_options = [null, null, null];
 
         // initial search
         $this->_saveOptions();

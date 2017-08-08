@@ -15,20 +15,20 @@ class HttpTest extends BaseTest
      */
     public function getConfig()
     {
-        return array(
-            array(
-                array('transport' => 'Http', 'curl' => array(CURLINFO_HEADER_OUT => true)),
+        return [
+            [
+                ['transport' => 'Http', 'curl' => [CURLINFO_HEADER_OUT => true]],
                 'GET',
-            ),
-            array(
-                array('transport' => array('type' => 'Http', 'postWithRequestBody' => false, 'curl' => array(CURLINFO_HEADER_OUT => true))),
+            ],
+            [
+                ['transport' => ['type' => 'Http', 'postWithRequestBody' => false, 'curl' => [CURLINFO_HEADER_OUT => true]]],
                 'GET',
-            ),
-            array(
-                array('transport' => array('type' => 'Http', 'postWithRequestBody' => true, 'curl' => array(CURLINFO_HEADER_OUT => true))),
+            ],
+            [
+                ['transport' => ['type' => 'Http', 'postWithRequestBody' => true, 'curl' => [CURLINFO_HEADER_OUT => true]]],
                 'POST',
-            ),
-        );
+            ],
+        ];
     }
 
     /**
@@ -40,11 +40,11 @@ class HttpTest extends BaseTest
         $client = $this->_getClient($config);
 
         $index = $client->getIndex('dynamic_http_method_test');
-        $index->create(array(), true);
+        $index->create([], true);
         $this->_waitForAllocation($index);
 
         $type = $index->getType('test');
-        $type->addDocument(new Document(1, array('test' => 'test')));
+        $type->addDocument(new Document(1, ['test' => 'test']));
 
         $index->refresh();
 
@@ -74,7 +74,7 @@ class HttpTest extends BaseTest
     {
         $client = $this->_getClient();
         $index = $client->getIndex('curl_test');
-        $index->create(array(), true);
+        $index->create([], true);
         $this->_waitForAllocation($index);
 
         $type = $index->getType('item');
@@ -82,7 +82,7 @@ class HttpTest extends BaseTest
         $index->exists();
 
         $id = 1;
-        $data = array('id' => $id, 'name' => 'Item 1');
+        $data = ['id' => $id, 'name' => 'Item 1'];
         $doc = new \Elastica\Document($id, $data);
 
         $type->addDocument($doc);
@@ -103,7 +103,7 @@ class HttpTest extends BaseTest
     {
         $client = $this->_getClient();
         $index = $client->getIndex('curl_test');
-        $index->create(array(), true);
+        $index->create([], true);
         $this->_waitForAllocation($index);
 
         $type = $index->getType('item');
@@ -112,11 +112,11 @@ class HttpTest extends BaseTest
         $index->exists();
 
         $id = 22;
-        $data = array('id' => $id, 'name' => '
+        $data = ['id' => $id, 'name' => '
             Сегодня, я вижу, особенно грустен твой взгляд, /
             И руки особенно тонки, колени обняв. /
             Послушай: далеко, далеко, на озере Чад /
-            Изысканный бродит жираф.');
+            Изысканный бродит жираф.'];
 
         $doc = new \Elastica\Document($id, $data);
 
@@ -200,26 +200,28 @@ class HttpTest extends BaseTest
         $client = $this->_getClient();
 
         $index = $client->getIndex('elastica_body_reuse_test');
-        $index->create(array(), true);
+        $index->create([], true);
         $this->_waitForAllocation($index);
 
         $type = $index->getType('test');
-        $type->addDocument(new Document(1, array('test' => 'test')));
+        $type->addDocument(new Document(1, ['test' => 'test']));
 
         $index->refresh();
 
-        $resultSet = $index->search(array(
-            'query' => array(
-                'query_string' => array(
+        $resultSet = $index->search([
+            'query' => [
+                'query_string' => [
                     'query' => 'pew pew pew',
-                ),
-            ),
-        ));
+                ],
+            ],
+        ]);
 
         $this->assertEquals(0, $resultSet->getTotalHits());
 
         $response = $index->request('/_search', 'POST');
-        $resultSet = new ResultSet($response, Query::create(array()));
+
+        $builder = new ResultSet\DefaultBuilder();
+        $resultSet = $builder->buildResultSet($response, Query::create([]));
 
         $this->assertEquals(1, $resultSet->getTotalHits());
     }
@@ -227,18 +229,33 @@ class HttpTest extends BaseTest
     /**
      * @group functional
      */
-    public function testPostWith0Body()
+    public function testRequestSuccessWithHttpCompressionEnabled()
     {
-        $client = $this->_getClient();
+        $client = $this->_getClient(['transport' => ['type' => 'Http', 'compression' => true, 'curl' => [CURLINFO_HEADER_OUT => true]]]);
 
-        $index = $client->getIndex('elastica_0_body');
-        $index->create(array(), true);
-        $this->_waitForAllocation($index);
-        $index->refresh();
+        $index = $client->getIndex('elastica_request_with_body_and_http_compression_enabled');
 
-        $tokens = $index->analyze('0');
+        $createIndexResponse = $index->create([], true);
 
-        $this->assertNotEmpty($tokens);
+        $createIndexResponseTransferInfo = $createIndexResponse->getTransferInfo();
+        $this->assertRegExp('/Accept-Encoding:\ (gzip|deflate)/', $createIndexResponseTransferInfo['request_header']);
+        $this->assertArrayHasKey('acknowledged', $createIndexResponse->getData());
+    }
+
+    /**
+     * @group functional
+     */
+    public function testRequestSuccessWithHttpCompressionDisabled()
+    {
+        $client = $this->_getClient(['transport' => ['type' => 'Http', 'compression' => false, 'curl' => [CURLINFO_HEADER_OUT => true]]]);
+
+        $index = $client->getIndex('elastica_request_with_body_and_http_compression_disabled');
+
+        $createIndexResponse = $index->create([], true);
+
+        $createIndexResponseTransferInfo = $createIndexResponse->getTransferInfo();
+        $this->assertRegExp('/Accept-Encoding:\ (gzip|deflate)/', $createIndexResponseTransferInfo['request_header']);
+        $this->assertArrayHasKey('acknowledged', $createIndexResponse->getData());
     }
 
     protected function checkProxy($url)

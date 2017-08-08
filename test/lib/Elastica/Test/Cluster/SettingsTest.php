@@ -63,12 +63,12 @@ class SettingsTest extends BaseTest
         $index1 = $this->_createIndex();
         $index2 = $this->_createIndex();
 
-        $doc1 = new Document(null, array('hello' => 'world'));
-        $doc2 = new Document(null, array('hello' => 'world'));
-        $doc3 = new Document(null, array('hello' => 'world'));
-        $doc4 = new Document(null, array('hello' => 'world'));
-        $doc5 = new Document(null, array('hello' => 'world'));
-        $doc6 = new Document(null, array('hello' => 'world'));
+        $doc1 = new Document(null, ['hello' => 'world']);
+        $doc2 = new Document(null, ['hello' => 'world']);
+        $doc3 = new Document(null, ['hello' => 'world']);
+        $doc4 = new Document(null, ['hello' => 'world']);
+        $doc5 = new Document(null, ['hello' => 'world']);
+        $doc6 = new Document(null, ['hello' => 'world']);
 
         // Check that adding documents work
         $index1->getType('test')->addDocument($doc1);
@@ -84,18 +84,18 @@ class SettingsTest extends BaseTest
             $index1->getType('test')->addDocument($doc3);
             $this->fail('should throw read only exception');
         } catch (ResponseException $e) {
-            $message = $e->getMessage();
-            $this->assertContains('ClusterBlockException', $message);
-            $this->assertContains('cluster read-only', $message);
+            $error = $e->getResponse()->getFullError();
+            $this->assertContains('cluster_block_exception', $error['type']);
+            $this->assertContains('cluster read-only', $error['reason']);
         }
 
         try {
             $index2->getType('test')->addDocument($doc4);
             $this->fail('should throw read only exception');
         } catch (ResponseException $e) {
-            $message = $e->getMessage();
-            $this->assertContains('ClusterBlockException', $message);
-            $this->assertContains('cluster read-only', $message);
+            $error = $e->getResponse()->getFullError();
+            $this->assertContains('cluster_block_exception', $error['type']);
+            $this->assertContains('cluster read-only', $error['reason']);
         }
 
         $response = $settings->setReadOnly(false);

@@ -6,13 +6,13 @@ use Elastica\QueryBuilder\Version;
 /**
  * elasticsearch 0.9 DSL.
  *
- * @link http://www.elastic.co/guide/en/elasticsearch/reference/0.90/index.html
+ * @link https://www.elastic.co/guide/en/elasticsearch/reference/0.90/index.html
  *
  * @author Manuel Andreo Garcia <andreo.garcia@googlemail.com>
  */
 class Version090 extends Version
 {
-    protected $queries = array(
+    protected $queries = [
         'match',
         'multi_match',
         'bool',
@@ -55,9 +55,9 @@ class Version090 extends Version
         'wildcard',
         'text',
         'minimum_should_match',
-    );
+    ];
 
-    protected $filters = array(
+    protected $filters = [
         'bool_and', // original: bool
         'bool',
         'exists',
@@ -87,11 +87,11 @@ class Version090 extends Version
         'term',
         'terms',
         'type',
-    );
+    ];
 
-    protected $suggesters = array(
+    protected $suggesters = [
         'term',
         'phrase',
         'completion',
-    );
+    ];
 }

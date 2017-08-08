@@ -1,6 +1,8 @@
 <?php
 namespace Elastica\Filter;
 
+trigger_error('Deprecated: Filters are deprecated. Use queries in filter context. See https://www.elastic.co/guide/en/elasticsearch/reference/2.0/query-dsl-filters.html', E_USER_DEPRECATED);
+
 /**
  * geo_shape filter for pre-indexed shapes.
  *
@@ -8,7 +10,8 @@ namespace Elastica\Filter;
  *
  * @author Bennie Krijger <benniekrijger@gmail.com>
  *
- * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-geo-shape-filter.html
+ * @link https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-geo-shape-filter.html
+ * @deprecated Filters are deprecated. Use queries in filter context. See https://www.elastic.co/guide/en/elasticsearch/reference/2.0/query-dsl-filters.html
  */
 class GeoShapePreIndexed extends AbstractGeoShape
 {
@@ -67,18 +70,18 @@ class GeoShapePreIndexed extends AbstractGeoShape
      */
     public function toArray()
     {
-        return array(
-            'geo_shape' => array(
-                $this->_path => array(
-                    'indexed_shape' => array(
+        return [
+            'geo_shape' => [
+                $this->_path => [
+                    'indexed_shape' => [
                         'id' => $this->_indexedId,
                         'type' => $this->_indexedType,
                         'index' => $this->_indexedIndex,
                         'path' => $this->_indexedPath,
-                    ),
+                    ],
                     'relation' => $this->_relation,
-                ),
-            ),
-        );
+                ],
+            ],
+        ];
     }
 }

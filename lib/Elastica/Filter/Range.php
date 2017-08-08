@@ -1,12 +1,15 @@
 <?php
 namespace Elastica\Filter;
 
+trigger_error('Deprecated: Filters are deprecated. Use queries in filter context. See https://www.elastic.co/guide/en/elasticsearch/reference/2.0/query-dsl-filters.html', E_USER_DEPRECATED);
+
 /**
  * Range Filter.
  *
  * @author Nicolas Ruflin <spam@ruflin.com>
  *
- * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-range-filter.html
+ * @link https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-range-filter.html
+ * @deprecated Filters are deprecated. Use queries in filter context. See https://www.elastic.co/guide/en/elasticsearch/reference/2.0/query-dsl-filters.html
  */
 class Range extends AbstractFilter
 {
@@ -15,7 +18,7 @@ class Range extends AbstractFilter
      *
      * @var array Fields
      */
-    protected $_fields = array();
+    protected $_fields = [];
 
     /**
      * Construct range filter.
@@ -23,7 +26,7 @@ class Range extends AbstractFilter
      * @param string $fieldName Field name
      * @param array  $args      Field arguments
      */
-    public function __construct($fieldName = '', array $args = array())
+    public function __construct($fieldName = '', array $args = [])
     {
         if ($fieldName) {
             $this->addField($fieldName, $args);

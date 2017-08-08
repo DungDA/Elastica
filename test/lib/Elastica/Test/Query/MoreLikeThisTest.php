@@ -2,6 +2,8 @@
 namespace Elastica\Test\Query;
 
 use Elastica\Document;
+use Elastica\Filter\BoolFilter;
+use Elastica\Filter\Term;
 use Elastica\Index;
 use Elastica\Query;
 use Elastica\Query\MoreLikeThis;
@@ -18,41 +20,137 @@ class MoreLikeThisTest extends BaseTest
     {
         $client = $this->_getClient();
         $index = new Index($client, 'test');
-        $index->create(array(), true);
+        $index->create([], true);
         $index->getSettings()->setNumberOfReplicas(0);
         //$index->getSettings()->setNumberOfShards(1);
 
         $type = new Type($index, 'helloworldmlt');
-        $mapping = new Mapping($type, array(
-            'email' => array('store' => 'yes', 'type' => 'string', 'index' => 'analyzed'),
-            'content' => array('store' => 'yes', 'type' => 'string',  'index' => 'analyzed'),
-        ));
+        $mapping = new Mapping($type, [
+            'email' => ['store' => 'yes', 'type' => 'string', 'index' => 'analyzed'],
+            'content' => ['store' => 'yes', 'type' => 'string',  'index' => 'analyzed'],
+        ]);
 
-        $mapping->setSource(array('enabled' => false));
+        $mapping->setSource(['enabled' => false]);
         $type->setMapping($mapping);
 
-        $doc = new Document(1000, array('email' => 'testemail@gmail.com', 'content' => 'This is a sample post. Hello World Fuzzy Like This!'));
+        $doc = new Document(1000, ['email' => 'testemail@gmail.com', 'content' => 'This is a sample post. Hello World Fuzzy Like This!']);
         $type->addDocument($doc);
 
-        $doc = new Document(1001, array('email' => 'nospam@gmail.com', 'content' => 'This is a fake nospam email address for gmail'));
+        $doc = new Document(1001, ['email' => 'nospam@gmail.com', 'content' => 'This is a fake nospam email address for gmail']);
         $type->addDocument($doc);
 
         // Refresh index
         $index->refresh();
 
         $mltQuery = new MoreLikeThis();
-        $mltQuery->setLikeText('fake gmail sample');
-        $mltQuery->setFields(array('email', 'content'));
-        $mltQuery->setMaxQueryTerms(1);
+        $mltQuery->setLike('fake gmail sample');
+        $mltQuery->setFields(['email', 'content']);
+        $mltQuery->setMaxQueryTerms(3);
         $mltQuery->setMinDocFrequency(1);
         $mltQuery->setMinTermFrequency(1);
 
         $query = new Query();
-        $query->setFields(array('email', 'content'));
         $query->setQuery($mltQuery);
 
         $resultSet = $type->search($query);
         $resultSet->getResponse()->getData();
+        $this->assertEquals(2, $resultSet->count());
+    }
+
+    /**
+     * @group functional
+     */
+    public function testSearchByDocument()
+    {
+        $client = $this->_getClient(['persistent' => false]);
+        $index = $client->getIndex('elastica_test');
+        $index->create(['index' => ['number_of_shards' => 1, 'number_of_replicas' => 0]], true);
+
+        $type = new Type($index, 'mlt_test');
+
+        $type->addDocuments([
+            new Document(1, ['visible' => true, 'name' => 'bruce wayne batman']),
+            new Document(2, ['visible' => true, 'name' => 'bruce wayne']),
+            new Document(3, ['visible' => false, 'name' => 'bruce wayne']),
+            new Document(4, ['visible' => true, 'name' => 'batman']),
+            new Document(5, ['visible' => false, 'name' => 'batman']),
+            new Document(6, ['visible' => true, 'name' => 'superman']),
+            new Document(7, ['visible' => true, 'name' => 'spiderman']),
+        ]);
+
+        $index->refresh();
+
+        $doc = $type->getDocument(1);
+
+        // Return all similar from id
+        $mltQuery = new MoreLikeThis();
+
+        $mltQuery->setMinTermFrequency(1);
+        $mltQuery->setMinDocFrequency(1);
+
+        $mltQuery->setLike($doc);
+
+        $query = new Query($mltQuery);
+
+        $resultSet = $type->search($query);
+        $this->assertEquals(4, $resultSet->count());
+
+        $mltQuery = new MoreLikeThis();
+
+        $mltQuery->setMinTermFrequency(1);
+        $mltQuery->setMinDocFrequency(1);
+
+        $mltQuery->setLike($doc);
+
+        $query = new Query\BoolQuery();
+        $query->addMust($mltQuery);
+        $this->hideDeprecated();
+
+        // Return just the visible similar from id
+        $filter = new Query\BoolQuery();
+        $filterTerm = new Query\Term();
+        $filterTerm->setTerm('visible', true);
+        $filter->addMust($filterTerm);
+        $query->addFilter($filter);
+        $this->showDeprecated();
+        $resultSet = $type->search($query);
+        $this->assertEquals(2, $resultSet->count());
+
+        // Return all similar from source
+        $mltQuery = new MoreLikeThis();
+
+        $mltQuery->setMinTermFrequency(1);
+        $mltQuery->setMinDocFrequency(1);
+        $mltQuery->setMinimumShouldMatch(90);
+
+        $mltQuery->setLike(
+            $type->getDocument(1)->setId('')
+        );
+
+        $query = new Query($mltQuery);
+
+        $resultSet = $type->search($query);
+        $this->assertEquals(1, $resultSet->count());
+
+        // Legacy test with filter
+        $mltQuery = new MoreLikeThis();
+
+        $mltQuery->setMinTermFrequency(1);
+        $mltQuery->setMinDocFrequency(1);
+
+        $mltQuery->setLike($doc);
+
+        $query = new Query\BoolQuery();
+        $query->addMust($mltQuery);
+        $this->hideDeprecated();
+        // Return just the visible similar
+        $filter = new BoolFilter();
+        $filterTerm = new Term();
+        $filterTerm->setTerm('visible', true);
+        $filter->addMust($filterTerm);
+        $query->addFilter($filter);
+        $this->showDeprecated();
+        $resultSet = $type->search($query);
         $this->assertEquals(2, $resultSet->count());
     }
 
@@ -63,7 +161,7 @@ class MoreLikeThisTest extends BaseTest
     {
         $query = new MoreLikeThis();
 
-        $fields = array('firstname', 'lastname');
+        $fields = ['firstname', 'lastname'];
         $query->setFields($fields);
 
         $data = $query->toArray();
@@ -72,27 +170,35 @@ class MoreLikeThisTest extends BaseTest
 
     /**
      * @group unit
+     * @expectedException \Elastica\Exception\DeprecatedException
      */
     public function testSetIds()
     {
         $query = new MoreLikeThis();
-        $ids = array(1, 2, 3);
+        $ids = [1, 2, 3];
         $query->setIds($ids);
-
-        $data = $query->toArray();
-        $this->assertEquals($ids, $data['more_like_this']['ids']);
     }
 
     /**
      * @group unit
      */
+    public function testSetLike()
+    {
+        $query = new MoreLikeThis();
+        $query->setLike(' hello world');
+
+        $data = $query->toArray();
+        $this->assertEquals(' hello world', $data['more_like_this']['like']);
+    }
+
+    /**
+     * @group unit
+     * @expectedException \Elastica\Exception\DeprecatedException
+     */
     public function testSetLikeText()
     {
         $query = new MoreLikeThis();
         $query->setLikeText(' hello world');
-
-        $data = $query->toArray();
-        $this->assertEquals('hello world', $data['more_like_this']['like_text']);
     }
 
     /**
@@ -123,6 +229,7 @@ class MoreLikeThisTest extends BaseTest
 
     /**
      * @group unit
+     * @expectedException \Elastica\Exception\DeprecatedException
      */
     public function testSetPercentTermsToMatch()
     {
@@ -130,8 +237,6 @@ class MoreLikeThisTest extends BaseTest
 
         $match = 0.8;
         $query->setPercentTermsToMatch($match);
-
-        $this->assertEquals($match, $query->getParam('percent_terms_to_match'));
     }
 
     /**
@@ -232,9 +337,57 @@ class MoreLikeThisTest extends BaseTest
     {
         $query = new MoreLikeThis();
 
-        $stopWords = array('no', 'yes', 'test');
+        $stopWords = ['no', 'yes', 'test'];
         $query->setStopWords($stopWords);
 
         $this->assertEquals($stopWords, $query->getParam('stop_words'));
+    }
+
+    /**
+     * @group unit
+     */
+    public function testToArrayForId()
+    {
+        $query = new MoreLikeThis();
+        $query->setLike(new Document(1, [], 'type', 'index'));
+
+        $data = $query->toArray();
+
+        $this->assertEquals(
+            ['more_like_this' => [
+                'like' => [
+                    '_id' => 1,
+                    '_type' => 'type',
+                    '_index' => 'index',
+                ],
+            ],
+            ],
+            $data
+        );
+    }
+
+    /**
+     * @group unit
+     */
+    public function testToArrayForSource()
+    {
+        $query = new MoreLikeThis();
+        $query->setLike(new Document('', ['Foo' => 'Bar'], 'type', 'index'));
+
+        $data = $query->toArray();
+
+        $this->assertEquals(
+            ['more_like_this' => [
+                'like' => [
+                    '_type' => 'type',
+                    '_index' => 'index',
+                    'doc' => [
+                        'Foo' => 'Bar',
+                    ],
+                ],
+            ],
+            ],
+            $data
+        );
     }
 }

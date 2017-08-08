@@ -2,10 +2,23 @@
 namespace Elastica\Test\Filter;
 
 use Elastica\Filter\Term;
-use Elastica\Test\Base as BaseTest;
+use Elastica\Test\DeprecatedClassBase as BaseTest;
 
 class TermTest extends BaseTest
 {
+    /**
+     * @group unit
+     */
+    public function testDeprecated()
+    {
+        $reflection = new \ReflectionClass(new Term());
+
+        $this->assertFileDeprecated(
+            $reflection->getFileName(),
+            'Deprecated: Filters are deprecated. Use queries in filter context. See https://www.elastic.co/guide/en/elasticsearch/reference/2.0/query-dsl-filters.html'
+        );
+    }
+
     /**
      * @group unit
      */
@@ -19,6 +32,6 @@ class TermTest extends BaseTest
         $data = $query->toArray();
 
         $this->assertInternalType('array', $data['term']);
-        $this->assertEquals(array($key => $value), $data['term']);
+        $this->assertEquals([$key => $value], $data['term']);
     }
 }

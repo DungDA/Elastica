@@ -19,7 +19,7 @@ class ConnectionTest extends BaseTest
         $this->assertInstanceOf('Elastica\Transport\AbstractTransport', $connection->getTransportObject());
         $this->assertEquals(Connection::TIMEOUT, $connection->getTimeout());
         $this->assertEquals(Connection::CONNECT_TIMEOUT, $connection->getConnectTimeout());
-        $this->assertEquals(array(), $connection->getConfig());
+        $this->assertEquals([], $connection->getConfig());
         $this->assertTrue($connection->isEnabled());
     }
 
@@ -42,9 +42,9 @@ class ConnectionTest extends BaseTest
      */
     public function testInvalidConnection()
     {
-        $connection = new Connection(array('port' => 9999));
+        $connection = new Connection(['port' => 9999]);
 
-        $request = new Request('_status', Request::GET);
+        $request = new Request('_stats', Request::GET);
         $request->setConnection($connection);
 
         // Throws exception because no valid connection
@@ -59,11 +59,11 @@ class ConnectionTest extends BaseTest
         $connection = Connection::create();
         $this->assertInstanceOf('Elastica\Connection', $connection);
 
-        $connection = Connection::create(array());
+        $connection = Connection::create([]);
         $this->assertInstanceOf('Elastica\Connection', $connection);
 
         $port = 9999;
-        $connection = Connection::create(array('port' => $port));
+        $connection = Connection::create(['port' => $port]);
         $this->assertInstanceOf('Elastica\Connection', $connection);
         $this->assertEquals($port, $connection->getPort());
     }
@@ -84,7 +84,7 @@ class ConnectionTest extends BaseTest
     public function testGetConfig()
     {
         $url = 'test';
-        $connection = new Connection(array('config' => array('url' => $url)));
+        $connection = new Connection(['config' => ['url' => $url]]);
         $this->assertTrue($connection->hasConfig('url'));
         $this->assertEquals($url, $connection->getConfig('url'));
     }
@@ -94,7 +94,7 @@ class ConnectionTest extends BaseTest
      */
     public function testGetConfigWithArrayUsedForTransport()
     {
-        $connection = new Connection(array('transport' => array('type' => 'Http')));
+        $connection = new Connection(['transport' => ['type' => 'Http']]);
         $this->assertInstanceOf('Elastica\Transport\Http', $connection->getTransportObject());
     }
 
@@ -105,7 +105,7 @@ class ConnectionTest extends BaseTest
      */
     public function testGetInvalidConfigWithArrayUsedForTransport()
     {
-        $connection = new Connection(array('transport' => array('type' => 'invalidtransport')));
+        $connection = new Connection(['transport' => ['type' => 'invalidtransport']]);
         $connection->getTransportObject();
     }
 
@@ -146,9 +146,31 @@ class ConnectionTest extends BaseTest
      */
     public function testCompressionEnabledWithClient()
     {
-        $client = new \Elastica\Client(array('connections' => array(array('compression' => true))));
+        $client = new \Elastica\Client(['connections' => [['compression' => true]]]);
         $connection = $client->getConnection();
 
         $this->assertTrue($connection->hasCompression());
+    }
+
+    /**
+     * @group unit
+     */
+    public function testUsernameFromClient()
+    {
+        $username = 'foo';
+        $client = new \Elastica\Client(['username' => $username]);
+
+        $this->assertEquals($username, $client->getConnection()->getUsername('username'));
+    }
+
+    /**
+     * @group unit
+     */
+    public function testPasswordFromClient()
+    {
+        $password = 'bar';
+        $client = new \Elastica\Client(['password' => $password]);
+
+        $this->assertEquals($password, $client->getConnection()->getPassword('password'));
     }
 }

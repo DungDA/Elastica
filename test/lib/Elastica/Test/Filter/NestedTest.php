@@ -5,51 +5,60 @@ use Elastica\Document;
 use Elastica\Filter\Nested;
 use Elastica\Query\Terms;
 use Elastica\Search;
-use Elastica\Test\Base as BaseTest;
+use Elastica\Test\DeprecatedClassBase as BaseTest;
 use Elastica\Type\Mapping;
 
 class NestedTest extends BaseTest
 {
+    /**
+     * @group unit
+     */
+    public function testDeprecated()
+    {
+        $reflection = new \ReflectionClass(new Nested());
+        $this->assertFileDeprecated($reflection->getFileName(), 'Deprecated: Filters are deprecated. Use queries in filter context. See https://www.elastic.co/guide/en/elasticsearch/reference/2.0/query-dsl-filters.html');
+    }
+
     protected function _getIndexForTest()
     {
         $index = $this->_createIndex('elastica_test_filter_nested');
         $type = $index->getType('user');
         $mapping = new Mapping();
         $mapping->setProperties(
-            array(
-                'firstname' => array('type' => 'string', 'store' => 'yes'),
+            [
+                'firstname' => ['type' => 'string', 'store' => 'yes'],
                 // default is store => no expected
-                'lastname' => array('type' => 'string'),
-                'hobbies' => array(
+                'lastname' => ['type' => 'string'],
+                'hobbies' => [
                     'type' => 'nested',
                     'include_in_parent' => true,
-                    'properties' => array('hobby' => array('type' => 'string')),
-                ),
-            )
+                    'properties' => ['hobby' => ['type' => 'string']],
+                ],
+            ]
         );
         $type->setMapping($mapping);
 
-        $response = $type->addDocuments(array(
+        $response = $type->addDocuments([
             new Document(1,
-                array(
+                [
                     'firstname' => 'Nicolas',
                     'lastname' => 'Ruflin',
-                    'hobbies' => array(
-                        array('hobby' => 'opensource'),
-                    ),
-                )
+                    'hobbies' => [
+                        ['hobby' => 'opensource'],
+                    ],
+                ]
             ),
             new Document(2,
-                array(
+                [
                     'firstname' => 'Nicolas',
                     'lastname' => 'Ippolito',
-                    'hobbies' => array(
-                        array('hobby' => 'opensource'),
-                        array('hobby' => 'guitar'),
-                    ),
-                )
+                    'hobbies' => [
+                        ['hobby' => 'opensource'],
+                        ['hobby' => 'guitar'],
+                    ],
+                ]
             ),
-        ));
+        ]);
 
         $index->refresh();
 
@@ -62,20 +71,20 @@ class NestedTest extends BaseTest
     public function testToArray()
     {
         $filter = new Nested();
-        $this->assertEquals(array('nested' => array()), $filter->toArray());
+        $this->assertEquals(['nested' => []], $filter->toArray());
         $query = new Terms();
-        $query->setTerms('hobby', array('guitar'));
+        $query->setTerms('hobby', ['guitar']);
         $filter->setPath('hobbies');
         $filter->setQuery($query);
 
-        $expectedArray = array(
-            'nested' => array(
+        $expectedArray = [
+            'nested' => [
                 'path' => 'hobbies',
-                'query' => array('terms' => array(
-                    'hobby' => array('guitar'),
-                )),
-            ),
-        );
+                'query' => ['terms' => [
+                    'hobby' => ['guitar'],
+                ]],
+            ],
+        ];
 
         $this->assertEquals($expectedArray, $filter->toArray());
     }
@@ -86,21 +95,22 @@ class NestedTest extends BaseTest
     public function testShouldReturnTheRightNumberOfResult()
     {
         $filter = new Nested();
-        $this->assertEquals(array('nested' => array()), $filter->toArray());
+        $this->assertEquals(['nested' => []], $filter->toArray());
         $query = new Terms();
-        $query->setTerms('hobby', array('guitar'));
+        $query->setTerms('hobbies.hobby', ['guitar']);
         $filter->setPath('hobbies');
         $filter->setQuery($query);
 
         $search = new Search($this->_getClient());
         $search->addIndex($this->_getIndexForTest());
         $resultSet = $search->search($filter);
+
         $this->assertEquals(1, $resultSet->getTotalHits());
 
         $filter = new Nested();
-        $this->assertEquals(array('nested' => array()), $filter->toArray());
+        $this->assertEquals(['nested' => []], $filter->toArray());
         $query = new Terms();
-        $query->setTerms('hobby', array('opensource'));
+        $query->setTerms('hobbies.hobby', ['opensource']);
         $filter->setPath('hobbies');
         $filter->setQuery($query);
 

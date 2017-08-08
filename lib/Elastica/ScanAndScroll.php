@@ -6,7 +6,7 @@ namespace Elastica;
  *
  * @author Manuel Andreo Garcia <andreo.garcia@gmail.com>
  *
- * @link http://www.elastic.co/guide/en/elasticsearch/guide/current/scan-scroll.html
+ * @link https://www.elastic.co/guide/en/elasticsearch/guide/current/scan-scroll.html
  */
 class ScanAndScroll extends Scroll
 {
@@ -38,7 +38,7 @@ class ScanAndScroll extends Scroll
     {
         // reset state
         $this->_nextScrollId = null;
-        $this->_options = array(null, null, null, null);
+        $this->_options = [null, null, null, null];
 
         $this->_saveOptions();
 

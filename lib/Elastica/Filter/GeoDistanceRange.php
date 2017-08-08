@@ -3,12 +3,15 @@ namespace Elastica\Filter;
 
 use Elastica\Exception\InvalidException;
 
+trigger_error('Deprecated: Filters are deprecated. Use queries in filter context. See https://www.elastic.co/guide/en/elasticsearch/reference/2.0/query-dsl-filters.html', E_USER_DEPRECATED);
+
 /**
  * Geo distance filter.
  *
  * @author munkie
  *
- * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-geo-distance-range-filter.html
+ * @link https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-geo-distance-range-filter.html
+ * @deprecated Filters are deprecated. Use queries in filter context. See https://www.elastic.co/guide/en/elasticsearch/reference/2.0/query-dsl-filters.html
  */
 class GeoDistanceRange extends AbstractGeoDistance
 {
@@ -25,7 +28,7 @@ class GeoDistanceRange extends AbstractGeoDistance
     /**
      * @var array
      */
-    protected $_ranges = array();
+    protected $_ranges = [];
 
     /**
      * @param string       $key
@@ -34,7 +37,7 @@ class GeoDistanceRange extends AbstractGeoDistance
      *
      * @internal param string $distance
      */
-    public function __construct($key, $location, array $ranges = array())
+    public function __construct($key, $location, array $ranges = [])
     {
         parent::__construct($key, $location);
 
@@ -50,7 +53,7 @@ class GeoDistanceRange extends AbstractGeoDistance
      */
     public function setRanges(array $ranges)
     {
-        $this->_ranges = array();
+        $this->_ranges = [];
 
         foreach ($ranges as $key => $value) {
             $this->setRange($key, $value);

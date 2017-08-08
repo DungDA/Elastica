@@ -15,34 +15,34 @@ class NestedFilterWithSetFilterTest extends BaseTest
         $index = $this->_createIndex();
         $type = $index->getType('user');
 
-        $type->setMapping(new Mapping(null, array(
-            'firstname' => array('type' => 'string', 'store' => 'yes'),
+        $type->setMapping(new Mapping(null, [
+            'firstname' => ['type' => 'string', 'store' => 'yes'],
             // default is store => no expected
-            'lastname' => array('type' => 'string'),
-            'hobbies' => array(
+            'lastname' => ['type' => 'string'],
+            'hobbies' => [
                 'type' => 'nested',
                 'include_in_parent' => true,
-                'properties' => array('hobby' => array('type' => 'string')),
-            ),
-        )));
+                'properties' => ['hobby' => ['type' => 'string']],
+            ],
+        ]));
 
-        $type->addDocuments(array(
-            new Document(1, array(
+        $type->addDocuments([
+            new Document(1, [
                 'firstname' => 'Nicolas',
                 'lastname' => 'Ruflin',
-                'hobbies' => array(
-                    array('hobby' => 'opensource'),
-                ),
-            )),
-            new Document(2, array(
+                'hobbies' => [
+                    ['hobby' => 'opensource'],
+                ],
+            ]),
+            new Document(2, [
                 'firstname' => 'Nicolas',
                 'lastname' => 'Ippolito',
-                'hobbies' => array(
-                    array('hobby' => 'opensource'),
-                    array('hobby' => 'guitar'),
-                ),
-            )),
-        ));
+                'hobbies' => [
+                    ['hobby' => 'opensource'],
+                    ['hobby' => 'guitar'],
+                ],
+            ]),
+        ]);
 
         $index->refresh();
 
@@ -54,21 +54,23 @@ class NestedFilterWithSetFilterTest extends BaseTest
      */
     public function testToArray()
     {
+        $this->hideDeprecated();
         $filter = new Nested();
-        $this->assertEquals(array('nested' => array()), $filter->toArray());
+        $this->showDeprecated();
+        $this->assertEquals(['nested' => []], $filter->toArray());
         $query = new Terms();
-        $query->setTerms('hobby', array('guitar'));
+        $query->setTerms('hobby', ['guitar']);
         $filter->setPath('hobbies');
         $filter->setFilter($query);
 
-        $expectedArray = array(
-            'nested' => array(
+        $expectedArray = [
+            'nested' => [
                 'path' => 'hobbies',
-                'filter' => array('terms' => array(
-                    'hobby' => array('guitar'),
-                )),
-            ),
-        );
+                'filter' => ['terms' => [
+                    'hobby' => ['guitar'],
+                ]],
+            ],
+        ];
 
         $this->assertEquals($expectedArray, $filter->toArray());
     }
@@ -78,10 +80,12 @@ class NestedFilterWithSetFilterTest extends BaseTest
      */
     public function testShouldReturnTheRightNumberOfResult()
     {
+        $this->hideDeprecated();
+
         $filter = new Nested();
-        $this->assertEquals(array('nested' => array()), $filter->toArray());
+        $this->assertEquals(['nested' => []], $filter->toArray());
         $query = new Terms();
-        $query->setTerms('hobby', array('guitar'));
+        $query->setTerms('hobbies.hobby', ['guitar']);
         $filter->setPath('hobbies');
         $filter->setFilter($query);
 
@@ -94,9 +98,9 @@ class NestedFilterWithSetFilterTest extends BaseTest
         $this->assertEquals(1, $resultSet->getTotalHits());
 
         $filter = new Nested();
-        $this->assertEquals(array('nested' => array()), $filter->toArray());
+        $this->assertEquals(['nested' => []], $filter->toArray());
         $query = new Terms();
-        $query->setTerms('hobby', array('opensource'));
+        $query->setTerms('hobbies.hobby', ['opensource']);
         $filter->setPath('hobbies');
         $filter->setFilter($query);
 
@@ -105,6 +109,9 @@ class NestedFilterWithSetFilterTest extends BaseTest
         $index = $this->_getIndexForTest();
         $search->addIndex($index);
         $resultSet = $search->search($filter);
+
+        $this->showDeprecated();
+
         $this->assertEquals(2, $resultSet->getTotalHits());
     }
 }

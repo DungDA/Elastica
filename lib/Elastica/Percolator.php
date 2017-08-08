@@ -6,7 +6,7 @@ namespace Elastica;
  *
  * @author Nicolas Ruflin <spam@ruflin.com>
  *
- * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-percolate.html
+ * @link https://www.elastic.co/guide/en/elasticsearch/reference/current/search-percolate.html
  */
 class Percolator
 {
@@ -15,27 +15,25 @@ class Percolator
     const EXTRA_SIZE = 'size';
     const EXTRA_TRACK_SCORES = 'track_scores';
     const EXTRA_SORT = 'sort';
-    const EXTRA_FACETS = 'facets';
     const EXTRA_AGGS = 'aggs';
     const EXTRA_HIGHLIGHT = 'highlight';
 
-    private $_extraRequestBodyOptions = array(
+    private $_extraRequestBodyOptions = [
         self::EXTRA_FILTER,
         self::EXTRA_QUERY,
         self::EXTRA_SIZE,
         self::EXTRA_TRACK_SCORES,
         self::EXTRA_SORT,
-        self::EXTRA_FACETS,
         self::EXTRA_AGGS,
         self::EXTRA_HIGHLIGHT,
-    );
+    ];
 
     /**
      * Index object.
      *
      * @var \Elastica\Index
      */
-    protected $_index = null;
+    protected $_index;
 
     /**
      * Construct new percolator.
@@ -57,7 +55,7 @@ class Percolator
      *
      * @return \Elastica\Response
      */
-    public function registerQuery($name, $query, $fields = array())
+    public function registerQuery($name, $query, $fields = [])
     {
         $path = $this->_index->getName().'/.percolator/'.$name;
         $query = Query::create($query);
@@ -94,16 +92,15 @@ class Percolator
      *                                                                     Percolator::EXTRA_SIZE,
      *                                                                     Percolator::EXTRA_TRACK_SCORES,
      *                                                                     Percolator::EXTRA_SORT,
-     *                                                                     Percolator::EXTRA_FACETS,
      *                                                                     Percolator::EXTRA_AGGS,
      *                                                                     Percolator::EXTRA_HIGHLIGHT ]
      *
      * @return array With matching registered queries.
      */
-    public function matchDoc(Document $doc, $query = null, $type = 'type', $params = array())
+    public function matchDoc(Document $doc, $query = null, $type = 'type', $params = [])
     {
         $path = $this->_index->getName().'/'.$type.'/_percolate';
-        $data = array('doc' => $doc->getData());
+        $data = ['doc' => $doc->getData()];
 
         $this->_applyAdditionalRequestBodyOptions($params, $data);
 
@@ -123,18 +120,17 @@ class Percolator
      *                                                                     Percolator::EXTRA_SIZE,
      *                                                                     Percolator::EXTRA_TRACK_SCORES,
      *                                                                     Percolator::EXTRA_SORT,
-     *                                                                     Percolator::EXTRA_FACETS,
      *                                                                     Percolator::EXTRA_AGGS,
      *                                                                     Percolator::EXTRA_HIGHLIGHT ]
      *
      * @return array With matching registered queries.
      */
-    public function matchExistingDoc($id, $type, $query = null, $params = array())
+    public function matchExistingDoc($id, $type, $query = null, $params = [])
     {
         $id = urlencode($id);
         $path = $this->_index->getName().'/'.$type.'/'.$id.'/_percolate';
 
-        $data = array();
+        $data = [];
         $this->_applyAdditionalRequestBodyOptions($params, $data);
 
         return $this->_percolate($path, $query, $data, $params);
@@ -164,7 +160,7 @@ class Percolator
      *
      * @return array
      */
-    protected function _percolate($path, $query, $data = array(), $params = array())
+    protected function _percolate($path, $query, $data = [], $params = [])
     {
         // Add query to filter the percolator queries which are executed.
         if ($query) {
@@ -179,7 +175,7 @@ class Percolator
             return $data['matches'];
         }
 
-        return array();
+        return [];
     }
 
     /**

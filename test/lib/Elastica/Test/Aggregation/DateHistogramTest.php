@@ -13,15 +13,15 @@ class DateHistogramTest extends BaseAggregationTest
         $index = $this->_createIndex();
         $type = $index->getType('test');
 
-        $type->setMapping(new Mapping(null, array(
-            'created' => array('type' => 'date'),
-        )));
+        $type->setMapping(new Mapping(null, [
+            'created' => ['type' => 'date'],
+        ]));
 
-        $type->addDocuments(array(
-            new Document(1, array('created' => '2014-01-29T00:20:00')),
-            new Document(2, array('created' => '2014-01-29T02:20:00')),
-            new Document(3, array('created' => '2014-01-29T03:20:00')),
-        ));
+        $type->addDocuments([
+            new Document(1, ['created' => '2014-01-29T00:20:00']),
+            new Document(2, ['created' => '2014-01-29T02:20:00']),
+            new Document(3, ['created' => '2014-01-29T03:20:00']),
+        ]);
 
         $index->refresh();
 
@@ -39,7 +39,19 @@ class DateHistogramTest extends BaseAggregationTest
         $query->addAggregation($agg);
         $results = $this->_getIndexForTest()->search($query)->getAggregation('hist');
 
-        $this->assertEquals(3, sizeof($results['buckets']));
+        $docCount = 0;
+        $nonDocCount = 0;
+        foreach ($results['buckets'] as $bucket) {
+            if ($bucket['doc_count'] == 1) {
+                ++$docCount;
+            } else {
+                ++$nonDocCount;
+            }
+        }
+        // 3 Documents that were added
+        $this->assertEquals(3, $docCount);
+        // 1 document that was generated in between for the missing hour
+        $this->assertEquals(1, $nonDocCount);
     }
 
     /**
@@ -51,13 +63,13 @@ class DateHistogramTest extends BaseAggregationTest
 
         $agg->setOffset('3m');
 
-        $expected = array(
-            'date_histogram' => array(
+        $expected = [
+            'date_histogram' => [
                 'field' => 'created',
                 'interval' => '1h',
                 'offset' => '3m',
-            ),
-        );
+            ],
+        ];
 
         $this->assertEquals($expected, $agg->toArray());
 
@@ -90,13 +102,13 @@ class DateHistogramTest extends BaseAggregationTest
 
         $agg->setTimezone('-02:30');
 
-        $expected = array(
-            'date_histogram' => array(
+        $expected = [
+            'date_histogram' => [
                 'field' => 'created',
                 'interval' => '1h',
                 'time_zone' => '-02:30',
-            ),
-        );
+            ],
+        ];
 
         $this->assertEquals($expected, $agg->toArray());
 

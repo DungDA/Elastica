@@ -5,28 +5,37 @@ use Elastica\Document;
 use Elastica\Filter\Ids;
 use Elastica\Filter\Type;
 use Elastica\Query;
-use Elastica\Test\Base as BaseTest;
+use Elastica\Test\DeprecatedClassBase as BaseTest;
 
 class IdsTest extends BaseTest
 {
+    /**
+     * @group unit
+     */
+    public function testDeprecated()
+    {
+        $reflection = new \ReflectionClass(new Ids());
+        $this->assertFileDeprecated($reflection->getFileName(), 'Deprecated: Filters are deprecated. Use queries in filter context. See https://www.elastic.co/guide/en/elasticsearch/reference/2.0/query-dsl-filters.html');
+    }
+
     protected function _getIndexForTest()
     {
         $index = $this->_createIndex();
 
         // Add documents to first type
-        $docs = array();
+        $docs = [];
         for ($i = 1; $i < 100; ++$i) {
-            $docs[] = new Document($i, array('name' => 'ruflin'));
+            $docs[] = new Document($i, ['name' => 'ruflin']);
         }
         $index->getType('helloworld1')->addDocuments($docs);
 
         // Add documents to second type
-        $docs = array();
+        $docs = [];
         for ($i = 1; $i < 100; ++$i) {
-            $docs[] = new Document($i, array('name' => 'ruflin'));
+            $docs[] = new Document($i, ['name' => 'ruflin']);
         }
         // This is a special id that will only be in the second type
-        $docs[] = new Document(101, array('name' => 'ruflin'));
+        $docs[] = new Document(101, ['name' => 'ruflin']);
         $index->getType('helloworld2')->addDocuments($docs);
 
         $index->optimize();
@@ -60,7 +69,7 @@ class IdsTest extends BaseTest
     public function testSetIdsSearchArray()
     {
         $filter = new Ids();
-        $filter->setIds(array(1, 7, 13));
+        $filter->setIds([1, 7, 13]);
 
         $query = Query::create($filter);
         $resultSet = $this->_getTypeForTest()->search($query);
@@ -105,7 +114,7 @@ class IdsTest extends BaseTest
     public function testComboIdsSearchArray()
     {
         $filter = new Ids();
-        $filter->setIds(array(1, 7, 13));
+        $filter->setIds([1, 7, 13]);
         $filter->addId('39');
 
         $query = Query::create($filter);
@@ -135,7 +144,7 @@ class IdsTest extends BaseTest
     public function testSetTypeSingleSearchArray()
     {
         $filter = new Ids();
-        $filter->setIds(array('1', '2'));
+        $filter->setIds(['1', '2']);
         $filter->setType('helloworld1');
 
         $query = Query::create($filter);
@@ -170,7 +179,7 @@ class IdsTest extends BaseTest
         $filter = new Ids();
 
         // Doc 4 is in the second type...
-        $filter->setIds(array('1', '101'));
+        $filter->setIds(['1', '101']);
         $filter->setType('helloworld1');
 
         $query = Query::create($filter);
@@ -186,8 +195,8 @@ class IdsTest extends BaseTest
     public function testSetTypeArraySearchArray()
     {
         $filter = new Ids();
-        $filter->setIds(array('1', '4'));
-        $filter->setType(array('helloworld1', 'helloworld2'));
+        $filter->setIds(['1', '4']);
+        $filter->setType(['helloworld1', 'helloworld2']);
 
         $query = Query::create($filter);
         $resultSet = $this->_getIndexForTest()->search($query);
@@ -202,7 +211,7 @@ class IdsTest extends BaseTest
     {
         $filter = new Ids();
         $filter->setIds('4');
-        $filter->setType(array('helloworld1', 'helloworld2'));
+        $filter->setType(['helloworld1', 'helloworld2']);
 
         $query = Query::create($filter);
         $resultSet = $this->_getIndexForTest()->search($query);
@@ -233,10 +242,10 @@ class IdsTest extends BaseTest
         $filter = new Ids();
 
         $filter->addType('foo');
-        $this->assertEquals(array('foo'), $filter->getParam('type'));
+        $this->assertEquals(['foo'], $filter->getParam('type'));
 
         $filter->addType($type);
-        $this->assertEquals(array('foo', $type->getName()), $filter->getParam('type'));
+        $this->assertEquals(['foo', $type->getName()], $filter->getParam('type'));
 
         $returnValue = $filter->addType('bar');
         $this->assertInstanceOf('Elastica\Filter\Ids', $returnValue);
